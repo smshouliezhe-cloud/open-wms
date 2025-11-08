@@ -1,0 +1,21 @@
+package ${packageName}.service${folderName}.impl;
+
+import lombok.RequiredArgsConstructor;
+import com.yiruantong.common.mybatis.core.service.ServiceImplPlus;
+import org.springframework.stereotype.Service;
+import ${packageName}.domain${folderName}.bo.${ClassName}Bo;
+import ${packageName}.domain${folderName}.vo.${ClassName}Vo;
+import ${packageName}.domain${folderName}.${ClassName};
+import ${packageName}.mapper${folderName}.${ClassName}Mapper;
+import ${packageName}.service${folderName}.I${ClassName}Service;
+
+/**
+ * ${functionName}Service业务层处理
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@RequiredArgsConstructor
+@Service
+public class ${ClassName}ServiceImpl extends ServiceImplPlus<${ClassName}Mapper, ${ClassName}, ${ClassName}Vo, ${ClassName}Bo> implements I${ClassName}Service {
+}

@@ -1,0 +1,561 @@
+#set( $exclueColumns = ["delFlag", "deleteTime", "deleteBy", "deleteByName", "createBy", "updateBy", "updateByName",
+  "tenantId", "expandFields", "orderNum"] )
+#set( $readOnlyColumns = ["createByName", "udpateByName", "createTime", "updateTime"] )
+#set($javaType_Date="Date")
+#set($rowIndex = -1)
+#set($colIndex = -1)
+{
+  "type": "page",
+  "id": "page_box",
+  "name": "page_box",
+  "data": {
+    "baseUrl": "$table.prefixRouter",
+    "menuId": $pageMenuId,
+    "tableId": $table.tableId,
+    "tableName": "$tableName",
+    "codeRegular": "$table.codeRegular",
+    "idField": "${pkColumn.javaField}"
+  },
+  "pullRefresh": {
+    "disabled": true
+  },
+  "body": [
+    {
+      "id": "crud_box",
+      "api": {
+        "url": "${baseUrl}/pageList",
+        "data": {
+          "prefixRouter": "${baseUrl}",
+          "pageSize": "${perPage}",
+          "pageIndex": "${page}",
+          "menuId": "${menuId}",
+          "modified": {
+            "&": "$$"
+          },
+          "queryBoList": [],
+          "sumColumnNames": []
+        },
+        "noTip": true,
+        "method": "post"
+      },
+      "type": "crud",
+      "filter": {
+        "id": "crud_form_filter",
+        "body": [
+          #foreach ($column in $columns)
+            #if(!$column.javaField.endsWith("Id"))
+              #set($colIndex = $colIndex + 1)
+              #if(!$exclueColumns.contains($column.javaField))
+                #if($column.javaType == $javaType_Date)
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "name": "$column.javaField",
+                    "type": "input-date-range",
+                    "valueFormat": "YYYY-MM-DD",
+                    "startPlaceholder": "${column.columnComment}开始",
+                    "size": "md"
+                  },
+                #else
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "name": "LIKE$$column.javaField",
+                    "type": "input-text",
+                    "placeholder": "$column.columnComment"
+                  },
+                #end
+              #end
+              #if($colIndex>10)
+                #break
+              #end
+            #end
+          #end
+          {
+            "type": "hidden"
+          }
+        ],
+        "feat": "Edit",
+        "title": "高级筛选",
+        "actions": [
+          {
+            "id": "u:$RandomUtil.randomString(12)",
+            "type": "submit",
+            "label": "查询",
+            "primary": true
+          }
+        ],
+        "submitText": ""
+      },
+      "columns": [
+        #foreach ($column in $columns)
+          #if($column.javaField=='enable')
+            {
+              "type": "mapping",
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "enable",
+              "label": "状态",
+              "toggled": true,
+              "placeholder": "-",
+              "map": {
+                "0": {
+                  "color": "#dc3545",
+                  "label": "停用"
+                },
+                "1": {
+                  "color": "#4096ff",
+                  "label": "启用"
+                },
+                "*": {
+                  "color": "#f59e0b",
+                  "label": "其他"
+                }
+              },
+              "itemSchema": {
+                "id": "u:b94ca7c4722e",
+                "type": "tag",
+                "color": "${color}",
+                "label": "${label}",
+                "className": "rounded-md"
+              }
+            },
+          #elseif($table.linkColumn==$column.javaField)
+            {
+              "type": "wrapper",
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "$column.javaField",
+              "label": "$column.columnComment",
+              "placeholder": "-",
+              "body": [
+                {
+                  "id": "u:c173ef25cb17",
+                  "type": "static",
+                  "onEvent": {
+                    "click": {
+                      "actions": [
+                        {
+                          "dialog": {
+                            "$ref": "modal-ref-1"
+                          },
+                          "actionType": "dialog",
+                          "ignoreError": false
+                        }
+                      ]
+                    }
+                  },
+                  "tpl": "${${column.javaField}}",
+                  "wrapperComponent": "",
+                  "quickEdit": false,
+                  "popOver": false,
+                  "copyable": false,
+                  "inputClassName": "text-primary cursor-pointer"
+                }
+              ],
+              "size": "none",
+              "style": {
+                "display": "flex",
+                "flexWrap": "nowrap",
+                "fontSize": 12,
+                "position": "static",
+                "fontFamily": "",
+                "flexDirection": "row",
+                "justifyContent": "center"
+              },
+              "width": 130,
+              "toggled": true,
+              "sortable": true,
+              "isFixedWidth": false,
+              "isFixedHeight": false
+            },
+          #elseif(!$exclueColumns.contains($column.javaField))
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "$column.javaField",
+              "type": "text",
+              "label": "$column.columnComment",
+              "toggled": true,
+              "sortable": true,
+              #if($column.javaType == $javaType_Date)
+                "width": 130,
+              #end
+              #if(1<=$foreach.index && $foreach.index < 3)
+                "searchable": {
+                  "name": "$column.javaField",
+                  "type": "input-text",
+                  "label": "$column.columnComment",
+                  "placeholder": "输入$column.columnComment"
+                },
+              #end
+              "placeholder": "-"
+            },
+          #end
+        #end
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "type": "operation",
+          "label": "操作",
+          "width": 130,
+          "buttons": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "icon": "fa fa-pencil",
+              "type": "button",
+              "tooltip": "编辑",
+              "tooltipPlacement": "top",
+              "onEvent": {
+                "click": {
+                  "weight": 0,
+                  "actions": [
+                    {
+                      "ignoreError": false,
+                      "actionType": "dialog",
+                      "dialog": {
+                        "$ref": "modal-ref-1"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "api": {
+                "url": "$baseUrl/remove/${${pkColumn.javaField}}",
+                "method": "delete"
+              },
+              "icon": "fa fa-times text-danger",
+              "type": "button",
+              "onEvent": {
+                "click": {
+                  "actions": [
+                    {
+                      "actionType": "reload",
+                      "componentId": "crud_box"
+                    }
+                  ]
+                }
+              },
+              "tooltip": "删除",
+              "actionType": "ajax",
+              "confirmText": "您确认要删除?",
+              "tooltipPlacement": "top"
+            }
+          ],
+          "toggled": true,
+          "className": "text-base",
+          "placeholder": "-",
+          "fixed": "right",
+          "align": "center"
+        }
+      ],
+      "onEvent": {
+        "rowClick": {
+          "actions": [
+            {
+              "actionType": "custom",
+              "scriptName": "tableClickHighlight"
+            }
+          ]
+        }
+      },
+      "perPage": 15,
+      "messages": {},
+      "bulkActions": [
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "type": "button",
+          "api": "delete:$baseUrl/remove/$ids",
+          "icon": "yrt-shanchu5",
+          "label": "删除",
+          "actionType": "ajax",
+          "confirmText": "确定要执行删除操作吗?",
+          "level": "danger"
+        }
+      ],
+      "primaryField": "${pkColumn.javaField}",
+      "quickSaveApi": "${baseUrl}/bulkUpdate",
+      "syncLocation": false,
+      "headerToolbar": [
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "icon": "yrt-jiahao",
+          "type": "button",
+          "label": "新建",
+          "level": "success",
+          "primary": true,
+          "onEvent": {
+            "click": {
+              "weight": 0,
+              "actions": [
+                {
+                  "ignoreError": false,
+                  "actionType": "dialog",
+                  "dialog": {
+                    "$ref": "modal-ref-1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "icon": "yrt-shuaxin",
+          "type": "button",
+          "label": "刷新",
+          "level": "light",
+          "primary": true,
+          "actionType": "reload",
+          "componentId": "crud_box"
+        },
+        "bulkActions",
+        {
+          "icon": "yrt2-tuichuquanping",
+          "type": "columns-toggler",
+          "align": "right",
+          "overlay": true,
+          "draggable": true,
+          "footerBtnSize": "sm"
+        },
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "name": "custom-super-search",
+          "type": "custom",
+          "align": "right",
+          "label": "高级筛选",
+          "onMountName": "createSuperSearch"
+        },
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "type": "button",
+          "align": "right",
+          "label": "重置",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "reset",
+                  "componentId": "tree"
+                },
+                {
+                  "actionType": "reset",
+                  "componentId": "crud_form_filter"
+                },
+                {
+                  "args": {
+                    "value": {
+                      "LIKE$title": ""
+                    }
+                  },
+                  "actionType": "setValue",
+                  "componentId": "form_quick_search"
+                }
+              ]
+            }
+          },
+          "actionType": "button"
+        },
+        {
+          "id": "form_quick_search",
+          "body": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "LIKE$$columns.get(1).javaField",
+              "type": "input-text",
+              "addOn": {
+                "id": "u:$RandomUtil.randomString(12)",
+                "type": "submit",
+                "label": "搜索"
+              },
+              "className": "mb-0",
+              "placeholder": "通过关键字搜索"
+            }
+          ],
+          "feat": "Edit",
+          "mode": "inline",
+          "type": "form",
+          "align": "right",
+          "target": "crud_box",
+          "wrapWithPanel": false,
+          "submitOnChange": true
+        }
+      ],
+      "perPageAvailable": [
+        5,
+        10,
+        20,
+        50,
+        100
+      ],
+      "quickSaveItemApi": {
+        "method": "post",
+        "url": "${baseUrl}/update",
+        "messages": {},
+        "requestAdaptor": "",
+        "adaptor": "",
+        "silent": true
+      },
+      "autoGenerateFilter": {
+        "columnsNum": 4,
+        "showBtnToolbar": false
+      },
+      "alwaysShowPagination": true,
+      "filterDefaultVisible": true,
+      "tableLayout": "fixed"
+    }
+  ],
+  "cssVars": {
+    "--Form-item-gap": "5px"
+  },
+  "definitions": {
+    "modal-ref-1": {
+      "type": "dialog",
+      "body": [
+        {
+          "id": "formEditor",
+          "api": {
+            "url": "${baseUrl}/saveEditor",
+            "data": {
+              "data": {
+                "master": {
+                  "&": "$$"
+                },
+                "detailList": []
+              },
+              "menuId": "${menuId}",
+              "idField": "${idField}",
+              "idValue": "${${pkColumn.javaField}}",
+              "tableId": "${tableId}",
+              "codeRegular": "${codeRegular}",
+              "detailParams": [],
+              "prefixRouter": "${baseUrl}",
+              "fieldStrategy": true
+            },
+            "method": "post",
+            "dataType": "json",
+            "messages": {},
+            "replaceData": false,
+            "requestAdaptor": "",
+            "silent": true
+          },
+          "initApi": {
+            "url": "${baseUrl}/editor",
+            "data": {
+              "menuId": "${menuId}",
+              "idField": "${idField}",
+              "idValue": "${${pkColumn.javaField} || 0}",
+              "tableId": "${tableId}",
+              "detailParams": [],
+              "prefixRouter": "${baseUrl}",
+              "sendOn": "!!this.${pkColumn.javaField}"
+            },
+            "method": "post",
+            "silent": true,
+            "adaptor": "return {\r\n  status: 0,\r\n  msg: \"请求成功\",\r\n  data: {\r\n    ...payload.master\r\n  }\r\n}",
+            "dataType": "json",
+            "messages": {},
+            "replaceData": false,
+            "requestAdaptor": ""
+          },
+          "body": [
+            #set($rowIndex = -1)
+            #set($colIndex = -1)
+            #foreach ($column in $columns)
+              #if(!$exclueColumns.contains($column.javaField))
+                #set($colIndex = $colIndex + 1)
+                #if($colIndex % 3 == 0)
+                  #set($rowIndex = $rowIndex + 1)
+                #end
+                {
+                  "id": "u:$RandomUtil.randomString(12)",
+                  "name": "$column.javaField",
+                  "type": "input-text",
+                  "label": "$column.columnComment",
+                  "row": $rowIndex,
+                  #if($readOnlyColumns.contains($column.javaField))
+                    "readOnly": true,
+                  #end
+                  "colSize": "1/3"
+                },
+              #end
+            #end
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "${idField}",
+              "type": "hidden",
+              "label": "ID"
+            }
+          ],
+          "feat": "Edit",
+          "name": "formEditor",
+          "type": "form",
+          "actions": [
+            {
+              "type": "submit",
+              "label": "提交",
+              "primary": true
+            }
+          ],
+          "dsType": "api",
+          "mode": "flex",
+          "labelAlign": "right",
+          "labelWidth": "6.25rem",
+          "onEvent": {
+            "submitSucc": {
+              "weight": 0,
+              "actions": [
+                {
+                  "componentId": "crud_box",
+                  "ignoreError": false,
+                  "outputVar": "",
+                  "actionType": "reload"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "title": "数据编辑",
+      "id": "u:c0e4e1d7395e",
+      "actions": [
+        {
+          "type": "button",
+          "actionType": "cancel",
+          "label": "取消",
+          "id": "u:73b637af5c98"
+        },
+        {
+          "type": "button",
+          "actionType": "confirm",
+          "label": "确定",
+          "primary": true,
+          "id": "u:fde760c76f6b"
+        }
+      ],
+      "draggable": true,
+      "closeOnEsc": true,
+      "showCloseButton": true,
+      "closeOnOutside": false,
+      "showErrorMsg": true,
+      "showLoading": true,
+      "size": "lg"
+    }
+  },
+  "wrapperCustomStyle": {
+    ".cxd-Tree-item .is-checked": {
+      "position": "relative",
+      "background-color": "var(--Tree-item-onChekced-bg)"
+    }
+  },
+  "regions": [
+    "body"
+  ],
+  "themeCss": {
+    "bodyControlClassName": {
+      "padding-and-margin:default": {
+        "paddingTop": "var(--sizes-size-0)",
+        "paddingRight": "var(--sizes-size-0)",
+        "paddingBottom": "var(--sizes-size-0)",
+        "paddingLeft": "var(--sizes-size-0)"
+      }
+    }
+  }
+}

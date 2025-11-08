@@ -1,0 +1,3 @@
+com.yiruantong.common.encrypt.config.EncryptorAutoConfiguration
+com.yiruantong.common.encrypt.config.ApiDecryptAutoConfiguration
+

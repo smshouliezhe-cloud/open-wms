@@ -1,0 +1,15 @@
+package ${packageName}.service${folderName};
+
+import com.yiruantong.common.mybatis.core.service.IServicePlus;
+import ${packageName}.domain${folderName}.${ClassName};
+import ${packageName}.domain${folderName}.vo.${ClassName}Vo;
+import ${packageName}.domain${folderName}.bo.${ClassName}Bo;
+
+/**
+ * ${functionName}Service接口
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+public interface I${ClassName}Service extends IServicePlus<${ClassName}, ${ClassName}Vo, ${ClassName}Bo> {
+}

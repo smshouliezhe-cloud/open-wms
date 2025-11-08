@@ -1,0 +1,6 @@
+com.yiruantong.common.translation.config.TranslationConfig
+com.yiruantong.common.translation.core.impl.DeptNameTranslationImpl
+com.yiruantong.common.translation.core.impl.DictTypeTranslationImpl
+com.yiruantong.common.translation.core.impl.OssUrlTranslationImpl
+com.yiruantong.common.translation.core.impl.RoleNamesTranslationImpl
+com.yiruantong.common.translation.core.impl.UserNameTranslationImpl

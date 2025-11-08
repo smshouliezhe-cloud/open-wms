@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yiruantong.system.mapper.permission.SysDeptMapper">
+
+    <resultMap type="com.yiruantong.system.domain.permission.vo.SysDeptVo" id="SysDeptResult">
+    </resultMap>
+
+    <select id="selectDeptList" resultMap="SysDeptResult">
+        select * from sys_dept ${ew.getCustomSqlSegment}
+    </select>
+
+    <select id="selectDeptById" resultMap="SysDeptResult">
+        select * from sys_dept where del_flag = '0' and dept_id = #{deptId}
+    </select>
+
+    <select id="selectDeptListByRoleId" resultType="Long">
+        select d.dept_id
+        from sys_dept d
+            left join sys_role_dept rd on d.dept_id = rd.dept_id
+        where rd.role_id = #{roleId}
+            <if test="deptCheckStrictly">
+                and d.dept_id not in (select d.parent_id from sys_dept d inner join sys_role_dept rd on d.dept_id = rd.dept_id and rd.role_id = #{roleId})
+            </if>
+        order by d.parent_id, d.order_num
+    </select>
+
+  <select id="getChildrenId" resultType="java.lang.String">
+    WITH RECURSIVE recursiveInfo AS
+    (
+      SELECT dept_id, dept_name, parent_id FROM sys_dept
+      WHERE dept_id=#{deptId}
+      UNION ALL
+      SELECT a.dept_id, a.dept_name, a.parent_id
+      FROM sys_dept AS a, recursiveInfo AS b WHERE a.parent_id = b.dept_id
+    )
+    SELECT GROUP_CONCAT(dept_Id) AS deptIds FROM recursiveInfo;
+  </select>
+
+</mapper>

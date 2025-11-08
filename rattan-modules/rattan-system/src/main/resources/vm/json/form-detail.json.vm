@@ -1,0 +1,154 @@
+#set( $exclueColumns = ["delFlag", "deleteTime", "deleteBy", "deleteByName", "createBy", "updateBy", "updateByName",
+  "tenantId", "expandFields", "orderNum"] )
+#set($javaType_Date="Date")
+{
+  "type": "page",
+  "body": [
+    {
+      "id": "u:9a226bc54ef3",
+      "type": "form",
+      "title": "数据编辑",
+      "mode": "flex",
+      "labelAlign": "top",
+      "dsType": "api",
+      "feat": "Edit",
+      "body": [
+        #foreach ($column in $columns)
+          #if(!$exclueColumns.contains($column.javaField))
+            #if($column.javaType == $javaType_Date)
+              {
+                "name": "$column.javaField",
+                "label": "${column.columnComment}",
+                "type": "input-date",
+                "valueFormat": "YYYY-MM-DD",
+                "id": "u:$RandomUtil.randomString(12)"
+              },
+            #else
+              {
+                "name": "$column.javaField",
+                "label": "${column.columnComment}",
+                "type": "input-text",
+                "id": "u:$RandomUtil.randomString(12)"
+              },
+            #end
+          #end
+        #end
+        {
+          "type": "input-table",
+          "name": "table",
+          "label": "单据明细",
+          "columns": [
+            {
+              "label": "名称",
+              "name": "name",
+              "quickEdit": {
+                "type": "input-text",
+                "name": "name"
+              },
+              "id": "u:ef110011b1fc"
+            },
+            {
+              "label": "分数",
+              "name": "score",
+              "quickEdit": {
+                "type": "input-number",
+                "name": "score"
+              },
+              "id": "u:86869eff2024"
+            },
+            {
+              "label": "等级",
+              "name": "level",
+              "quickEdit": {
+                "type": "select",
+                "name": "level"
+              },
+              "id": "u:3c73151d4574"
+            }
+          ],
+          "addable": false,
+          "footerAddBtn": {
+            "label": "新增",
+            "icon": "fa fa-plus"
+          },
+          "strictMode": true,
+          "id": "u:e3a15ac03a08"
+        }
+      ],
+      "api": {
+        "url": "${baseUrl}/saveEditor",
+        "method": "get"
+      },
+      "actions": [
+        {
+          "type": "button",
+          "label": "取消",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "cancel",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "default",
+          "id": "u:6222953671b9"
+        },
+        {
+          "type": "button",
+          "label": "重置",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "reset",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "default",
+          "id": "u:bf03c5e69979"
+        },
+        {
+          "type": "button",
+          "label": "保存",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "submit",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "primary",
+          "id": "u:ab746d0f424c"
+        }
+      ],
+      "resetAfterSubmit": true,
+      "initApi": "${baseUrl}/Editor",
+      "themeCss": {
+        "itemClassName": {
+          "padding-and-margin": {
+            "marginTop": "var(--sizes-size-0)",
+            "marginRight": "var(--sizes-size-0)",
+            "marginBottom": "var(--sizes-size-0)",
+            "marginLeft": "var(--sizes-size-0)"
+          }
+        }
+      }
+    }
+  ],
+  "id": "u:561431700569",
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": true
+  },
+  "regions": [
+    "body"
+  ]
+}

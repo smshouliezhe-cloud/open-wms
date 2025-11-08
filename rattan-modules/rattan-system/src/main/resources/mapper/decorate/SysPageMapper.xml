@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yiruantong.system.mapper.decorate.SysPageMapper">
+  <select id="getChildrenId" resultType="java.lang.String">
+    WITH RECURSIVE recursiveInfo AS
+                     (SELECT page_id, page_name, parent_id
+                      FROM sys_page
+                      WHERE page_id = #{pageId}
+                      UNION ALL
+                      SELECT a.page_id, a.page_name, a.parent_id
+                      FROM sys_page AS a,
+                           recursiveInfo AS b
+                      WHERE a.parent_id = b.page_id)
+    SELECT GROUP_CONCAT(page_Id) AS pageIds
+    FROM recursiveInfo;
+  </select>
+</mapper>

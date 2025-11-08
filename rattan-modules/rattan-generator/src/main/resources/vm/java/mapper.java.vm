@@ -1,0 +1,16 @@
+package ${packageName}.mapper${folderName};
+
+import org.apache.ibatis.annotations.Mapper;
+import ${packageName}.domain${folderName}.${ClassName};
+import ${packageName}.domain${folderName}.vo.${ClassName}Vo;
+import com.yiruantong.common.mybatis.core.mapper.BaseMapperPlus;
+
+/**
+ * ${functionName}Mapper接口
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+public interface ${ClassName}Mapper extends BaseMapperPlus<${ClassName}, ${ClassName}Vo> {
+
+}

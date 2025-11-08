@@ -1,0 +1,128 @@
+package com.yiruantong.common.mybatis.helper;
+
+import cn.hutool.core.convert.Convert;
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.yiruantong.common.core.exception.ServiceException;
+import com.yiruantong.common.core.utils.SpringUtils;
+import com.yiruantong.common.mybatis.enums.DataBaseType;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 数据库助手
+ *
+ * @author YiRuanTong
+ */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class DataBaseHelper {
+
+  private static final DynamicRoutingDataSource DS = SpringUtils.getBean(DynamicRoutingDataSource.class);
+
+  /**
+   * 获取当前数据库类型
+   */
+  public static DataBaseType getDataBaseType() {
+    DataSource dataSource = DS.determineDataSource();
+    try (Connection conn = dataSource.getConnection()) {
+      DatabaseMetaData metaData = conn.getMetaData();
+      String databaseProductName = metaData.getDatabaseProductName();
+      return DataBaseType.find(databaseProductName);
+    } catch (SQLException e) {
+      throw new ServiceException(e.getMessage());
+    }
+  }
+
+  public static boolean isMySql() {
+    return DataBaseType.MY_SQL == getDataBaseType();
+  }
+
+  public static boolean isOracle() {
+    return DataBaseType.ORACLE == getDataBaseType();
+  }
+
+  public static boolean isPostgerSql() {
+    return DataBaseType.POSTGRE_SQL == getDataBaseType();
+  }
+
+  public static boolean isSqlServer() {
+    return DataBaseType.SQL_SERVER == getDataBaseType();
+  }
+
+  /**
+   * 模糊查询
+   *
+   * @param var1
+   * @param var2
+   * @return
+   */
+  public static String findInSet(Object var1, String var2) {
+    DataBaseType dataBasyType = getDataBaseType();
+    String var = Convert.toStr(var1);
+    if (dataBasyType == DataBaseType.SQL_SERVER) {
+      // charindex(',100,' , ',0,100,101,') <> 0
+      return "charindex(',%s,' , ','+%s+',') <> 0".formatted(var, var2);
+    } else if (dataBasyType == DataBaseType.POSTGRE_SQL) {
+      // (select position(',100,' in ',0,100,101,')) <> 0
+      return "(select position(',%s,' in ','||%s||',')) <> 0".formatted(var, var2);
+    } else if (dataBasyType == DataBaseType.ORACLE) {
+      // instr(',0,100,101,' , ',100,') <> 0
+      return "instr(','||%s||',' , ',%s,') <> 0".formatted(var2, var);
+    }
+    // find_in_set(100 , '0,100,101')
+    return "find_in_set('%s' , %s) <> 0".formatted(var, var2);
+  }
+
+  /**
+   * 用于从 JSON 文档中提取一个或多个值
+   *
+   * @param jsonFieldName json字段名
+   * @param fieldName     json里面的字段名称
+   * @param fieldValue    json里面的字段值
+   * @return
+   */
+  public static String jsonValue(String jsonFieldName, String fieldName, Number fieldValue) {
+    DataBaseType dataBasyType = getDataBaseType();
+    if (dataBasyType == DataBaseType.SQL_SERVER) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    } else if (dataBasyType == DataBaseType.POSTGRE_SQL) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    } else if (dataBasyType == DataBaseType.ORACLE) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    }
+    return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+  }
+
+  /**
+   * 用于从 JSON 文档中提取一个或多个值
+   *
+   * @param jsonFieldName json字段名
+   * @param fieldName     json里面的字段名称
+   * @param fieldValue    json里面的字段值
+   * @return
+   */
+  public static String jsonValue(String jsonFieldName, String fieldName, String fieldValue) {
+    DataBaseType dataBasyType = getDataBaseType();
+    if (dataBasyType == DataBaseType.SQL_SERVER) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    } else if (dataBasyType == DataBaseType.POSTGRE_SQL) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    } else if (dataBasyType == DataBaseType.ORACLE) {
+      return "JSON_VALUE(expand_fields, '$.%s')=%s".formatted(fieldName, fieldValue);
+    }
+    return "JSON_VALUE(expand_fields, '$.%s')='%s'".formatted(fieldName, fieldValue);
+  }
+
+  /**
+   * 获取当前加载的数据库名
+   */
+  public static List<String> getDataSourceNameList() {
+    return new ArrayList<>(DS.getDataSources().keySet());
+  }
+}

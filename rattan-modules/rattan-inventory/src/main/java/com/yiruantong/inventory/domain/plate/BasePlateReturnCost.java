@@ -1,0 +1,114 @@
+package com.yiruantong.inventory.domain.plate;
+
+import com.yiruantong.common.mybatis.core.domain.TenantEntity;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+
+import java.io.Serial;
+
+/**
+ * 容器返厂费用明细对象 base_plate_return_cost
+ *
+ * @author YRT
+ * @date 2024-04-08
+ */
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@TableName(value = "base_plate_return_cost", autoResultMap = true)
+public class BasePlateReturnCost extends TenantEntity {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
+  /**
+   * 明细费用id
+   */
+  @TableId(value = "cost_id")
+  private Long costId;
+
+  /**
+   * 返厂单id
+   */
+  private Long returnFactoryId;
+
+  /**
+   * 费用科目id
+   */
+  private Long feeItemId;
+
+  /**
+   * 费用科目
+   */
+  private String feeItemName;
+
+  /**
+   * 计费方式
+   */
+  private String pricingManner;
+
+  /**
+   * 费用单价
+   */
+  private BigDecimal costPrice;
+
+  /**
+   * 小计费用
+   */
+  private BigDecimal subCost;
+
+  /**
+   * 删除时间
+   */
+  private Date deleteTime;
+
+  /**
+   * 删除人id
+   */
+  private Long deleteBy;
+
+  /**
+   * 删除人
+   */
+  private String deleteByName;
+
+  /**
+   * 合计数量
+   */
+  private BigDecimal totalQuantity;
+
+  /**
+   * 合计重量
+   */
+  private BigDecimal totalWeight;
+
+  /**
+   * 合计体积
+   */
+  private BigDecimal totalCube;
+
+  /**
+   * 计费值
+   */
+  private BigDecimal billableValue;
+
+  /**
+   * 合计件数
+   */
+  private BigDecimal totalPackage;
+
+  /**
+   * 容器名称
+   */
+  private String plateName;
+
+
+}

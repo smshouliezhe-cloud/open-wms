@@ -1,0 +1,5 @@
+com.yiruantong.common.web.config.CaptchaConfig
+com.yiruantong.common.web.config.FilterConfig
+com.yiruantong.common.web.config.I18nConfig
+com.yiruantong.common.web.config.ResourcesConfig
+com.yiruantong.common.web.config.UndertowConfig

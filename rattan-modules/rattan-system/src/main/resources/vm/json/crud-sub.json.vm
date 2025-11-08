@@ -1,0 +1,767 @@
+#set( $exclueColumns = ["delFlag", "deleteTime", "deleteBy", "deleteByName", "createBy", "updateBy", "updateByName",
+  "tenantId", "expandFields", "orderNum"] )
+#set( $readOnlyColumns = ["createByName", "udpateByName", "createTime", "updateTime"] )
+#set($javaType_Date="Date")
+#set($rowIndex = -1)
+#set($colIndex = -1)
+{
+  "type": "page",
+  "id": "page_box_${menuId}",
+  "name": "page_box_${menuId}",
+  "data": {
+    "baseUrl": "$table.prefixRouter",
+    "menuId": $pageMenuId,
+    "tableId": $table.tableId,
+    "tableName": "$tableName",
+    "codeRegular": "$table.codeRegular",
+    "idField": "${pkColumn.javaField}"
+  },
+  "pullRefresh": {
+    "disabled": true
+  },
+  "body": [
+    {
+      "id": "crud_box_${menuId}",
+      "api": {
+        "url": "${baseUrl}/pageList",
+        "data": {
+          "prefixRouter": "${baseUrl}",
+          "pageSize": "${perPage}",
+          "pageIndex": "${page}",
+          "menuId": "${menuId}",
+          "modified": {
+            "&": "$$"
+          },
+          "queryBoList": [],
+          "sumColumnNames": []
+        },
+        "noTip": true,
+        "method": "post"
+      },
+      "type": "crud",
+      "filter": {
+        "id": "crud_form_filter",
+        "body": [
+          #foreach ($column in $columns)
+            #if(!$column.javaField.endsWith("Id"))
+              #set($colIndex = $colIndex + 1)
+              #if(!$exclueColumns.contains($column.javaField))
+                #if($column.javaType == $javaType_Date)
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "name": "$column.javaField",
+                    "type": "input-date-range",
+                    "valueFormat": "YYYY-MM-DD",
+                    "startPlaceholder": "${column.columnComment}开始",
+                    "size": "md"
+                  },
+                #else
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "name": "LIKE$$column.javaField",
+                    "type": "input-text",
+                    "placeholder": "$column.columnComment"
+                  },
+                #end
+              #end
+              #if($colIndex>10)
+                #break
+              #end
+            #end
+          #end
+          {
+            "type": "hidden"
+          }
+        ],
+        "feat": "Edit",
+        "title": "高级筛选",
+        "actions": [
+          {
+            "id": "u:$RandomUtil.randomString(12)",
+            "type": "submit",
+            "label": "查询",
+            "primary": true
+          }
+        ],
+        "submitText": ""
+      },
+      "columns": [
+        #foreach ($column in $columns)
+          #if($column.javaField=='enable')
+            {
+              "type": "mapping",
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "enable",
+              "label": "状态",
+              "toggled": true,
+              "placeholder": "-",
+              "map": {
+                "0": {
+                  "color": "#dc3545",
+                  "label": "停用"
+                },
+                "1": {
+                  "color": "#4096ff",
+                  "label": "启用"
+                },
+                "*": {
+                  "color": "#f59e0b",
+                  "label": "其他"
+                }
+              },
+              "itemSchema": {
+                "id": "u:b94ca7c4722e",
+                "type": "tag",
+                "color": "${color}",
+                "label": "${label}",
+                "className": "rounded-md"
+              }
+            },
+          #elseif(!$exclueColumns.contains($column.javaField))
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "$column.javaField",
+              "type": "text",
+              "label": "$column.columnComment",
+              "toggled": true,
+              "sortable": true,
+              #if($column.javaType == $javaType_Date)
+                "width": 130,
+              #end
+              #if(1<=$foreach.index && $foreach.index < 3)
+                "searchable": {
+                  "name": "$column.javaField",
+                  "type": "input-text",
+                  "label": "$column.columnComment",
+                  "placeholder": "输入$column.columnComment"
+                },
+              #end
+              "placeholder": "-"
+            },
+          #end
+        #end
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "type": "operation",
+          "label": "操作",
+          "width": 130,
+          "buttons": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "icon": "fa fa-eye",
+              "type": "button",
+              "dialog": {
+                "body": {
+                  "type": "form",
+                  "id": "u:$RandomUtil.randomString(12)",
+                  "body": [
+                    #set($rowIndex = -1)
+                    #set($colIndex = -1)
+                    #foreach ($column in $columns)
+                      #if(!$exclueColumns.contains($column.javaField))
+                        #set($colIndex = $colIndex + 1)
+                        #if($colIndex % 3 == 0)
+                          #set($rowIndex = $rowIndex + 1)
+                        #end
+                        {
+                          "id": "u:$RandomUtil.randomString(12)",
+                          "name": "$column.javaField",
+                          "type": "static",
+                          "label": "$column.columnComment",
+                          "row": $rowIndex,
+                          "colSize": "1/3"
+                        },
+                      #end
+                    #end
+                    {
+                      "type": "hidden"
+                    }
+                  ],
+                  "feat": "Edit",
+                  "dsType": "api",
+                  "labelAlign": "right",
+                  "mode": "flex",
+                  "labelWidth": "7.5rem"
+                },
+                "type": "dialog",
+                "title": "查看",
+                "actions": [
+                  {
+                    "type": "button",
+                    "label": "上一个",
+                    "level": "info",
+                    "visibleOn": "data.hasPrev",
+                    "actionType": "prev"
+                  },
+                  {
+                    "type": "button",
+                    "label": "下一个",
+                    "level": "info",
+                    "visibleOn": "data.hasNext",
+                    "actionType": "next"
+                  },
+                  {
+                    "type": "button",
+                    "label": "关闭",
+                    "actionType": "cancel"
+                  }
+                ],
+                "actionType": "dialog",
+                "closeOnEsc": true,
+                "id": "u:$RandomUtil.randomString(12)",
+                "showCloseButton": true,
+                "closeOnOutside": false,
+                "showErrorMsg": true,
+                "showLoading": true,
+                "draggable": true,
+                "size": "md"
+              },
+              "tooltip": "查看",
+              "actionType": "dialog",
+              "tooltipPlacement": "top"
+            },
+            {
+              "id": "formEditor",
+              "icon": "fa fa-pencil",
+              "type": "button",
+              "dialog": {
+                "id": "u:$RandomUtil.randomString(12)",
+                "size": "lg",
+                "type": "dialog",
+                "title": "编辑",
+                "body": [
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "api": {
+                      "url": "${baseUrl}/saveEditor",
+                      "data": {
+                        "params": {
+                          "menuId": "${menuId}",
+                          "idField": "${idField}",
+                          "idValue": "${${pkColumn.javaField}}",
+                          "tableId": "${tableId}",
+                          "codeRegular": "$table.codeRegular",
+                          "detailParams": [],
+                          "prefixRouter": "${baseUrl}",
+                          "fieldStrategy": true
+                        },
+                        "modified": {
+                          "&": "$$"
+                        }
+                      },
+                      "method": "post",
+                      "adaptor": "",
+                      "dataType": "json",
+                      "messages": {
+                      },
+                      "replaceData": false,
+                      "requestAdaptor": ""
+                    },
+                    "body": [
+                      #set($rowIndex = -1)
+                      #set($colIndex = -1)
+                      #foreach ($column in $columns)
+                        #if(!$exclueColumns.contains($column.javaField))
+                          #set($colIndex = $colIndex + 1)
+                          #if($colIndex % 3 == 0)
+                            #set($rowIndex = $rowIndex + 1)
+                          #end
+                          {
+                            "id": "u:$RandomUtil.randomString(12)",
+                            "name": "$column.javaField",
+                            "type": "input-text",
+                            "label": "$column.columnComment",
+                            "row": $rowIndex,
+                            #if($readOnlyColumns.contains($column.javaField))
+                              "readOnly": true,
+                            #end
+                            "colSize": "1/3"
+                          },
+                        #end
+                      #end
+                      {
+                        "id": "u:$RandomUtil.randomString(12)",
+                        "name": "${idField}",
+                        "type": "hidden",
+                        "label": "ID"
+                      }
+                    ],
+                    "feat": "Edit",
+                    "name": "formEditor",
+                    "type": "form",
+                    "actions": [
+                      {
+                        "type": "submit",
+                        "label": "提交",
+                        "primary": true
+                      }
+                    ],
+                    "dsType": "api",
+                    "mode": "flex",
+                    "labelAlign": "right",
+                    "labelWidth": "6.25rem"
+                  }
+                ],
+                "actions": [
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "button",
+                    "label": "上一个",
+                    "level": "info",
+                    "visibleOn": "data.hasPrev",
+                    "actionType": "prev"
+                  },
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "button",
+                    "label": "下一个",
+                    "level": "info",
+                    "visibleOn": "data.hasNext",
+                    "actionType": "next"
+                  },
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "button",
+                    "label": "关闭",
+                    "actionType": "cancel"
+                  },
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "submit",
+                    "label": "保存并下一个",
+                    "level": "primary",
+                    "visibleOn": "data.hasNext",
+                    "actionType": "next"
+                  },
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "submit",
+                    "label": "保存",
+                    "level": "primary"
+                  }
+                ],
+                "draggable": true,
+                "actionType": "dialog",
+                "closeOnEsc": true,
+                "showLoading": true,
+                "showErrorMsg": true,
+                "closeOnOutside": false,
+                "showCloseButton": true,
+                "themeCss": {
+                  "dialogBodyClassName": {
+                    "padding-and-margin": {
+                      "marginTop": "var(--sizes-size-0)"
+                    }
+                  }
+                }
+              },
+              "reload": "tree,crud_box_${menuId}",
+              "tooltip": "编辑",
+              "actionType": "dialog",
+              "tooltipPlacement": "top"
+            },
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "api": {
+                "url": "$baseUrl/remove/${${pkColumn.javaField}}",
+                "method": "delete"
+              },
+              "icon": "fa fa-times text-danger",
+              "type": "button",
+              "onEvent": {
+                "click": {
+                  "actions": [
+                    {
+                      "actionType": "reload",
+                      "componentId": "crud_box"
+                    }
+                  ]
+                }
+              },
+              "tooltip": "删除",
+              "actionType": "ajax",
+              "confirmText": "您确认要删除?",
+              "tooltipPlacement": "top"
+            }
+          ],
+          "toggled": true,
+          "className": "text-base",
+          "placeholder": "-",
+          "fixed": "right",
+          "align": "center"
+        }
+      ],
+      "onEvent": {
+        "rowClick": {
+          "actions": [
+            {
+              "actionType": "custom",
+              "scriptName": "tableClickHighlight"
+            }
+          ]
+        }
+      },
+      "perPage": 15,
+      "messages": {},
+      "bulkActions": [
+        {
+          "type": "button-group",
+          "id": "u:ee604120f1b3",
+          "buttons": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "type": "button",
+              "api": "delete:$baseUrl/remove/$ids",
+              "icon": "yrt-shanchu5",
+              "label": "删除",
+              "actionType": "ajax",
+              "confirmText": "确定要执行删除操作吗?",
+              "level": "danger"
+            },
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "type": "button",
+              "api": "delete:$baseUrl/multiAuditing/$ids",
+              "label": "批量审核",
+              "actionType": "ajax",
+              "confirmText": "确定要批量审核?"
+            },
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "type": "button",
+              "label": "批量修改",
+              "dialog": {
+                "body": {
+                  "api": "$baseUrl/bulkUpdate",
+                  "body": [
+                    #set($rowIndex = -1)
+                    #set($colIndex = -1)
+                    #foreach ($column in $columns)
+                      #if(!$exclueColumns.contains($column.javaField))
+                        #set($colIndex = $colIndex + 1)
+                        #if($colIndex % 3 == 0)
+                          #set($rowIndex = $rowIndex + 1)
+                        #end
+                        {
+                          "id": "u:$RandomUtil.randomString(12)",
+                          "name": "$column.javaField",
+                          "type": "input-text",
+                          "label": "$column.columnComment",
+                          "row": $rowIndex,
+                          "colSize": "1/3"
+                        },
+                      #end
+                      #if($colIndex>10)
+                        #break
+                      #end
+                    #end
+                    {
+                      "name": "ids",
+                      "type": "hidden"
+                    }
+                  ],
+                  "type": "form"
+                },
+                "name": "sample-bulk-edit",
+                "type": "dialog",
+                "title": "批量编辑",
+                "actionType": "dialog",
+                "draggable": true,
+                "size": "lg"
+              },
+              "actionType": "dialog"
+            }
+          ],
+          "btnLevel": "primary",
+          "className": "m-t-xs m-b-xs"
+        }
+      ],
+      "primaryField": "${pkColumn.javaField}",
+      "quickSaveApi": "${baseUrl}/bulkUpdate",
+      "syncLocation": false,
+      "headerToolbar": [
+        {
+          "type": "button-group",
+          "id": "u:b6df90959850",
+          "buttons": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "icon": "yrt-jiahao",
+              "type": "button",
+              "label": "新建任务",
+              "level": "success",
+              "dialog": {
+                "id": "u:$RandomUtil.randomString(12)",
+                "body": [
+                  {
+                    "id": "form-add",
+                    "api": {
+                      "url": "${baseUrl}/saveEditor",
+                      "data": {
+                        "params": {
+                          "menuId": "${menuId}",
+                          "idField": "${idField}",
+                          "idValue": 0,
+                          "tableId": "${tableId}",
+                          "codeRegular": "${codeRegular}",
+                          "detailParams": [],
+                          "prefixRouter": "${baseUrl}"
+                        },
+                        "modified": {
+                          "&": "$$",
+                          "status": 1
+                        }
+                      },
+                      "method": "post",
+                      "adaptor": "",
+                      "dataType": "json",
+                      "messages": {
+                      },
+                      "replaceData": false,
+                      "requestAdaptor": ""
+                    },
+                    "body": [
+                      #set($rowIndex = -1)
+                      #set($colIndex = -1)
+                      #foreach ($column in $columns)
+                        #if(!$exclueColumns.contains($column.javaField))
+                          #set($colIndex = $colIndex + 1)
+                          #if($colIndex % 3 == 0)
+                            #set($rowIndex = $rowIndex + 1)
+                          #end
+                          {
+                            "id": "u:$RandomUtil.randomString(12)",
+                            "name": "$column.javaField",
+                            "type": "input-text",
+                            "label": "$column.columnComment",
+                            "row": $rowIndex,
+                            "colSize": "1/3"
+                          },
+                        #end
+                      #end
+                      {
+                        "type": "hidden"
+                      }
+                    ],
+                    "feat": "Edit",
+                    "mode": "flex",
+                    "type": "form",
+                    "title": "表单",
+                    "dsType": "api",
+                    "actions": [
+                      {
+                        "type": "button",
+                        "label": "取消",
+                        "level": "default",
+                        "onEvent": {
+                          "click": {
+                            "actions": [
+                              {
+                                "actionType": "cancel",
+                                "componentId": "u:$formAddId"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "button",
+                        "label": "重置",
+                        "level": "default",
+                        "onEvent": {
+                          "click": {
+                            "actions": [
+                              {
+                                "actionType": "reset",
+                                "componentId": "u:$formAddId"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "button",
+                        "label": "提交",
+                        "level": "primary",
+                        "onEvent": {
+                          "click": {
+                            "actions": [
+                              {
+                                "actionType": "submit",
+                                "componentId": "u:608d613722e4"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "labelAlign": "right",
+                    "resetAfterSubmit": true,
+                    "labelWidth": "7.5rem"
+                  }
+                ],
+                "size": "lg",
+                "type": "dialog",
+                "title": "新建模块",
+                "actions": [
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "button",
+                    "label": "取消",
+                    "actionType": "cancel"
+                  },
+                  {
+                    "id": "u:$RandomUtil.randomString(12)",
+                    "type": "button",
+                    "label": "确定",
+                    "primary": true,
+                    "actionType": "confirm"
+                  }
+                ],
+                "draggable": true,
+                "actionType": "dialog",
+                "closeOnEsc": true,
+                "showLoading": true,
+                "showErrorMsg": true,
+                "closeOnOutside": false,
+                "showCloseButton": true,
+                "resetAfterSubmit": true
+              },
+              "primary": true,
+              "actionType": "dialog",
+              "componentId": "crud_box_${menuId}"
+            },
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "icon": "yrt-shuaxin",
+              "type": "button",
+              "label": "刷新",
+              "level": "light",
+              "primary": true,
+              "actionType": "reload",
+              "componentId": "crud_box_${menuId}"
+            }
+          ],
+          "btnLevel": "primary",
+          "className": "m-t-xs m-b-xs"
+        },
+        "bulkActions",
+        {
+          "icon": "yrt2-tuichuquanping",
+          "type": "columns-toggler",
+          "align": "right",
+          "overlay": true,
+          "draggable": true,
+          "footerBtnSize": "sm"
+        },
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "name": "custom-super-search",
+          "type": "custom",
+          "align": "right",
+          "label": "高级筛选",
+          "onMountName": "createSuperSearch"
+        },
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "type": "button",
+          "align": "right",
+          "label": "重置",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "reset",
+                  "componentId": "tree"
+                },
+                {
+                  "actionType": "reset",
+                  "componentId": "crud_form_filter"
+                },
+                {
+                  "args": {
+                    "value": {
+                      "LIKE$title": ""
+                    }
+                  },
+                  "actionType": "setValue",
+                  "componentId": "form_quick_search"
+                }
+              ]
+            }
+          },
+          "actionType": "button"
+        },
+        {
+          "id": "form_quick_search",
+          "body": [
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "LIKE$$columns.get(1).javaField",
+              "type": "input-text",
+              "addOn": {
+                "id": "u:$RandomUtil.randomString(12)",
+                "type": "submit",
+                "label": "搜索"
+              },
+              "className": "mb-0",
+              "placeholder": "通过关键字搜索"
+            }
+          ],
+          "feat": "Edit",
+          "mode": "inline",
+          "type": "form",
+          "align": "right",
+          "target": "crud_box_${menuId}",
+          "wrapWithPanel": false,
+          "submitOnChange": true
+        }
+      ],
+      "perPageAvailable": [
+        5,
+        10,
+        20,
+        50,
+        100
+      ],
+      "quickSaveItemApi": {
+        "method": "post",
+        "url": "${baseUrl}/update",
+        "messages": {},
+        "requestAdaptor": "",
+        "adaptor": "",
+        "silent": true
+      },
+      "autoGenerateFilter": {
+        "columnsNum": 4,
+        "showBtnToolbar": false
+      },
+      "alwaysShowPagination": true,
+      "filterDefaultVisible": true,
+      "tableLayout": "fixed"
+    }
+  ],
+  "cssVars": {
+    "--Form-item-gap": "5px"
+  },
+  "definitions": {},
+  "wrapperCustomStyle": {
+    ".cxd-Tree-item .is-checked": {
+      "position": "relative",
+      "background-color": "var(--Tree-item-onChekced-bg)"
+    }
+  },
+  "regions": [
+    "body"
+  ],
+  "themeCss": {
+    "bodyControlClassName": {
+      "padding-and-margin:default": {
+        "paddingTop": "var(--sizes-size-0)",
+        "paddingRight": "var(--sizes-size-0)",
+        "paddingBottom": "var(--sizes-size-0)",
+        "paddingLeft": "var(--sizes-size-0)"
+      }
+    }
+  }
+}

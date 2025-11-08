@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.yiruantong</groupId>
+    <artifactId>rattan-modules</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>rattan-inbound</artifactId>
+  <description>基础信息</description>
+
+  <dependencies>
+    <!-- 通用工具-->
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-doc</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-mybatis</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-translation</artifactId>
+    </dependency>
+
+    <!-- OSS功能模块 -->
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-oss</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-log</artifactId>
+    </dependency>
+
+    <!-- excel-->
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-excel</artifactId>
+    </dependency>
+
+    <!-- SMS功能模块 -->
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-sms</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-tenant</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-security</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-idempotent</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-common-sensitive</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
+    <!-- rabbittmq client-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-system</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-basic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-inventory</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.yiruantong</groupId>
+      <artifactId>rattan-outbound</artifactId>
+    </dependency>
+
+    <!-- litefow相关配置-->
+    <dependency>
+      <groupId>com.yomahub</groupId>
+      <artifactId>liteflow-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yomahub</groupId>
+      <artifactId>liteflow-rule-sql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yomahub</groupId>
+      <artifactId>liteflow-script-javax</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.yomahub</groupId>
+      <artifactId>liteflow-script-graaljs</artifactId>
+    </dependency>
+  </dependencies>
+</project>

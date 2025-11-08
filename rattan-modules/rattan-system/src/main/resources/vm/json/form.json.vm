@@ -1,0 +1,127 @@
+#set( $exclueColumns = ["delFlag", "deleteTime", "deleteBy", "deleteByName", "createBy", "updateBy", "updateByName",
+  "tenantId", "expandFields", "orderNum"] )
+#set( $readOnlyColumns = ["createByName", "udpateByName", "createTime", "updateTime"] )
+#set($javaType_Date="Date")
+#set($rowIndex = -1)
+#set($colIndex = -1)
+{
+  "type": "page",
+  "body": [
+    {
+      "id": "u:9a226bc54ef3",
+      "type": "form",
+      "title": "数据编辑",
+      "feat": "Edit",
+      "body": [
+        #set($rowIndex = -1)
+        #set($colIndex = -1)
+        #foreach ($column in $columns)
+          #if(!$exclueColumns.contains($column.javaField))
+            #set($colIndex = $colIndex + 1)
+            #if($colIndex % 3 == 0)
+              #set($rowIndex = $rowIndex + 1)
+            #end
+            {
+              "id": "u:$RandomUtil.randomString(12)",
+              "name": "$column.javaField",
+              "type": "input-text",
+              "label": "$column.columnComment",
+              "row": $rowIndex,
+              #if($readOnlyColumns.contains($column.javaField))
+                "readOnly": true,
+              #end
+              "colSize": "1/3"
+            },
+          #end
+        #end
+        {
+          "id": "u:$RandomUtil.randomString(12)",
+          "name": "${idField}",
+          "type": "hidden",
+          "label": "ID"
+        }
+      ],
+      "api": {
+        "url": "${baseUrl}/saveEditor",
+        "method": "get"
+      },
+      "actions": [
+        {
+          "type": "button",
+          "label": "取消",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "cancel",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "default",
+          "id": "u:6222953671b9"
+        },
+        {
+          "type": "button",
+          "label": "重置",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "reset",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "default",
+          "id": "u:bf03c5e69979"
+        },
+        {
+          "type": "button",
+          "label": "保存",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "submit",
+                  "componentId": "u:9a226bc54ef3"
+                }
+              ]
+            }
+          },
+          "level": "primary",
+          "id": "u:ab746d0f424c"
+        }
+      ],
+      "resetAfterSubmit": true,
+      "initApi": "${baseUrl}/Editor",
+      "themeCss": {
+        "itemClassName": {
+          "padding-and-margin": {
+            "marginTop": "var(--sizes-size-0)",
+            "marginRight": "var(--sizes-size-0)",
+            "marginBottom": "var(--sizes-size-0)",
+            "marginLeft": "var(--sizes-size-0)"
+          }
+        }
+      },
+      "dsType": "api",
+      "mode": "flex",
+      "labelAlign": "right",
+      "labelWidth": "6.25rem"
+    }
+  ],
+  "id": "u:561431700569",
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": true
+  },
+  "cssVars": {
+    "--Form-item-gap": "5px"
+  },
+  "regions": [
+    "body"
+  ]
+}

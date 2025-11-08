@@ -1,0 +1,74 @@
+package ${packageName}.domain${folderName};
+
+  #foreach ($column in $columns)
+    #if($column.javaField=='tenantId')
+      #set($IsTenant=1)
+    #end
+  #end
+  #if($IsTenant==1)
+  import com.yiruantong.common.mybatis.core.domain.TenantEntity;
+  #else
+  import com.yiruantong.common.mybatis.core.domain.BaseEntity;
+  #end
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+
+import java.util.List;
+import java.util.Map;
+  #foreach ($import in $importList)
+  import ${import};
+  #end
+  $!table.expandImportsDo
+
+import java.io.Serial;
+
+/**
+ * ${functionName}对象 ${tableName}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+#if($IsTenant==1)
+  #set($Entity="TenantEntity")
+#else
+  #set($Entity="BaseEntity")
+#end
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@TableName(value = "${tableName}", autoResultMap = true)
+public class ${ClassName} extends ${Entity} {
+
+@Serial
+private static final long serialVersionUID=1L;
+
+#foreach ($column in $columns)
+  #if(!$table.isSuperColumn($column.javaField) && ($column.isList()))
+  /**
+   * $column.columnComment
+   */
+    #if($column.javaField=='delFlag')
+    @TableLogic
+    #end
+    #if($column.javaField=='version')
+    @Version
+    #end
+    #if($column.javaType=='Map<String, Object>' || $column.javaType=='List<Map<String, Object>>')
+    @TableField(value = "$column.columnName", typeHandler = JacksonTypeHandler.class)
+    #end
+    #if($column.isPk==1)
+    @TableId(value = "$column.columnName")
+    #end
+    #if($!column.doAnnotation)
+      $!column.doAnnotation
+    #end
+  private $column.javaType $column.javaField;
+
+  #end
+#end
+$!table.expandAttributesDo
+}

@@ -1,0 +1,55 @@
+package com.yiruantong.common.core.constant;
+
+/**
+ * 租户常量信息
+ *
+ * @author YiRuanTong
+ */
+public interface TenantConstants {
+
+  /**
+   * 租户正常状态
+   */
+  byte NORMAL = 1;
+
+  /**
+   * 租户封禁状态
+   */
+  byte DISABLE = 0;
+
+  /**
+   * 超级管理员ID
+   */
+  Long SUPER_ADMIN_ID = 1L;
+
+  /**
+   * 超级管理员角色 roleKey
+   */
+  String SUPER_ADMIN_ROLE_KEY = "superadmin";
+
+  /**
+   * 租户管理员角色 roleKey
+   */
+  String TENANT_ADMIN_ROLE_KEY = "admin";
+
+  /**
+   * 租户管理员角色名称
+   */
+  String TENANT_ADMIN_ROLE_NAME = "超级管理员";
+
+  /**
+   * 默认租户ID
+   */
+  String DEFAULT_TENANT_ID = "000000";
+
+  /**
+   * 没有租户ID
+   */
+  String NONE_TENANT_ID = "-1000";
+
+  /**
+   * 套餐1
+   */
+  Long PACKAGE_ID_1 = 1L;
+
+}

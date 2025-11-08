@@ -1,0 +1,25 @@
+package ${packageName}.controller${folderName};
+
+import lombok.RequiredArgsConstructor;
+import com.yiruantong.common.web.core.AbstractController;
+import ${packageName}.domain${folderName}.${ClassName};
+import ${packageName}.domain${folderName}.vo.${ClassName}Vo;
+import ${packageName}.domain${folderName}.bo.${ClassName}Bo;
+import ${packageName}.mapper${folderName}.${ClassName}Mapper;
+import ${packageName}.service${folderName}.I${ClassName}Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * ${functionName}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Validated
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/${projectName}/${moduleName}/${businessName}")
+public class ${ClassName}Controller extends AbstractController<${ClassName}Mapper, ${ClassName}, ${ClassName}Vo, ${ClassName}Bo> {
+}

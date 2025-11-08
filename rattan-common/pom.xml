@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>rattan-plus-api</artifactId>
+    <groupId>com.yiruantong</groupId>
+    <version>${revision}</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <modules>
+    <module>rattan-common-bom</module>
+    <module>rattan-common-social</module>
+    <module>rattan-common-core</module>
+    <module>rattan-common-doc</module>
+    <module>rattan-common-excel</module>
+    <module>rattan-common-idempotent</module>
+    <module>rattan-common-job</module>
+    <module>rattan-common-log</module>
+    <module>rattan-common-mail</module>
+    <module>rattan-common-mybatis</module>
+    <module>rattan-common-oss</module>
+    <module>rattan-common-ratelimiter</module>
+    <module>rattan-common-redis</module>
+    <module>rattan-common-rabbitmq</module>
+    <module>rattan-common-mongodb</module>
+    <module>rattan-common-satoken</module>
+    <module>rattan-common-security</module>
+    <module>rattan-common-sms</module>
+    <module>rattan-common-web</module>
+    <module>rattan-common-translation</module>
+    <module>rattan-common-sensitive</module>
+    <module>rattan-common-json</module>
+    <module>rattan-common-encrypt</module>
+    <module>rattan-common-tenant</module>
+    <module>rattan-common-websocket</module>
+    <module>rattan-common-app</module>
+  </modules>
+
+  <artifactId>rattan-common</artifactId>
+  <packaging>pom</packaging>
+
+  <description>
+    common 通用模块
+  </description>
+
+</project>
