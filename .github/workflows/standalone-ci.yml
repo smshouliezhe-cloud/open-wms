@@ -33,3 +33,54 @@ jobs:
           path: standalone-app/target/waterworks-standalone.jar
           if-no-files-found: error
           retention-days: 14
+
+  portable-windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download executable jar
+        uses: actions/download-artifact@v4
+        with:
+          name: waterworks-standalone-jar
+          path: dist/waterworks-standalone
+      - name: Build embedded Java runtime
+        shell: pwsh
+        run: |
+          $modules = 'java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.charsets,jdk.crypto.ec,jdk.httpserver,jdk.localedata,jdk.management,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.unsupported,jdk.zipfs'
+          & "$env:JAVA_HOME\bin\jlink.exe" --add-modules $modules --strip-debug --no-header-files --no-man-pages --compress=2 --output dist/waterworks-standalone/runtime
+          Copy-Item standalone-app/run-portable.bat dist/waterworks-standalone/run.bat
+          Copy-Item standalone-app/README.md dist/waterworks-standalone/README.md
+      - name: Smoke test portable package
+        shell: pwsh
+        run: |
+          $work = (Resolve-Path 'dist/waterworks-standalone').Path
+          $java = Join-Path $work 'runtime\bin\java.exe'
+          $jar = Join-Path $work 'waterworks-standalone.jar'
+          $process = Start-Process -FilePath $java -ArgumentList '-jar', $jar -WorkingDirectory $work -PassThru
+          $ok = $false
+          try {
+            for ($i = 0; $i -lt 30; $i++) {
+              Start-Sleep -Seconds 1
+              try {
+                $response = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:7861/api/inventory' -TimeoutSec 2
+                if ($response.StatusCode -eq 200) { $ok = $true; break }
+              } catch { }
+            }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+          if (-not $ok) { throw 'Portable Windows smoke test failed: application did not start.' }
+      - name: Upload Windows portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: waterworks-standalone-win64-portable
+          path: dist/waterworks-standalone
+          if-no-files-found: error
+          retention-days: 14
