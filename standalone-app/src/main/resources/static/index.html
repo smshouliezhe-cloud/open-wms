@@ -21,8 +21,10 @@
     <h2>WPS / Excel 导入</h2>
     <div class="row">
       <select id="type"><option value="IN">入库</option><option value="OUT">出库</option></select>
+      <button class="primary" onclick="previewWps()">读取当前打开的 WPS</button>
+      <span class="muted">或</span>
       <input id="file" class="grow" type="file" accept=".xlsx,.xls">
-      <button class="primary" onclick="preview()">读取并预览</button>
+      <button onclick="previewFile()">读取文件</button>
       <button onclick="commitRows()">确认入账</button>
       <span id="msg" class="muted"></span>
     </div>
@@ -39,11 +41,16 @@
 let previewRows=[];
 const esc=v=>String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 async function jsonOrError(res){const data=await res.json();if(!res.ok)throw new Error(data.error||'操作失败');return data}
-async function preview(){
+async function previewFile(){
   const f=document.getElementById('file').files[0];if(!f)return alert('请选择文件');
-  const fd=new FormData();fd.append('file',f);setMsg('正在读取…');
-  try{previewRows=await jsonOrError(await fetch('/api/import/preview',{method:'POST',body:fd}));renderPreview();setMsg(`识别 ${previewRows.length} 行，其中有效 ${previewRows.filter(x=>x.valid).length} 行`)}catch(e){setMsg(e.message,true)}
+  const fd=new FormData();fd.append('file',f);setMsg('正在读取文件…');
+  try{previewRows=await jsonOrError(await fetch('/api/import/preview',{method:'POST',body:fd}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}
 }
+async function previewWps(){
+  setMsg('正在读取当前 WPS…');
+  try{previewRows=await jsonOrError(await fetch('/api/wps/preview',{method:'POST'}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}
+}
+function setResultMessage(){setMsg(`识别 ${previewRows.length} 行，其中有效 ${previewRows.filter(x=>x.valid).length} 行。确认无误后再点“确认入账”。`)}
 function renderPreview(){
   const t=document.getElementById('previewTable');
   t.innerHTML='<tr><th>行</th><th>状态</th><th>日期</th><th>物资</th><th>规格</th><th>数量</th><th>单位</th><th>单价</th><th>领用/经办</th><th>备注</th></tr>'+previewRows.map(x=>`<tr><td>${x.sourceRow}</td><td class="${x.valid?'ok':'danger'}">${x.valid?'可导入':esc(x.error)}</td><td>${esc(x.row.date)}</td><td>${esc(x.row.name)}</td><td>${esc(x.row.spec)}</td><td>${esc(x.row.quantity)}</td><td>${esc(x.row.unit)}</td><td>${esc(x.row.unitPrice)}</td><td>${esc(x.row.receiver)}</td><td>${esc(x.row.remark)}</td></tr>`).join('');

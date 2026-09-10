@@ -2,6 +2,8 @@ package com.yiruantong.standalone.web;
 
 import com.yiruantong.standalone.service.ExcelImportService;
 import com.yiruantong.standalone.service.InventoryService;
+import com.yiruantong.standalone.service.TabularImportMapper;
+import com.yiruantong.standalone.service.WpsComService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,10 +17,16 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
     private final ExcelImportService excelImportService;
+    private final WpsComService wpsComService;
 
-    public InventoryController(InventoryService inventoryService, ExcelImportService excelImportService) {
+    public InventoryController(
+        InventoryService inventoryService,
+        ExcelImportService excelImportService,
+        WpsComService wpsComService
+    ) {
         this.inventoryService = inventoryService;
         this.excelImportService = excelImportService;
+        this.wpsComService = wpsComService;
     }
 
     public record CommitRequest(String type, List<InventoryService.StockRow> rows) {}
@@ -42,8 +50,13 @@ public class InventoryController {
     }
 
     @PostMapping(value = "/import/preview", consumes = "multipart/form-data")
-    public List<ExcelImportService.PreviewRow> preview(@RequestPart("file") MultipartFile file) throws Exception {
+    public List<TabularImportMapper.PreviewRow> preview(@RequestPart("file") MultipartFile file) throws Exception {
         return excelImportService.preview(file);
+    }
+
+    @PostMapping("/wps/preview")
+    public List<TabularImportMapper.PreviewRow> previewWps() throws Exception {
+        return wpsComService.previewActiveSheet();
     }
 
     @PostMapping("/import/commit")
