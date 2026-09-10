@@ -34,7 +34,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  portable-windows:
+  windows-exe:
     needs: build
     runs-on: windows-latest
     steps:
@@ -49,21 +49,30 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: waterworks-standalone-jar
-          path: dist/waterworks-standalone
+          path: dist/input
       - name: Build embedded Java runtime
         shell: pwsh
         run: |
           $modules = 'java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.charsets,jdk.crypto.ec,jdk.httpserver,jdk.localedata,jdk.management,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.unsupported,jdk.zipfs'
-          & "$env:JAVA_HOME\bin\jlink.exe" --add-modules $modules --strip-debug --no-header-files --no-man-pages --compress=2 --output dist/waterworks-standalone/runtime
-          Copy-Item standalone-app/run-portable.bat dist/waterworks-standalone/run.bat
-          Copy-Item standalone-app/README.md dist/waterworks-standalone/README.md
-      - name: Smoke test portable package
+          & "$env:JAVA_HOME\bin\jlink.exe" --add-modules $modules --strip-debug --no-header-files --no-man-pages --compress=2 --output dist/runtime
+      - name: Build portable EXE app
         shell: pwsh
         run: |
-          $work = (Resolve-Path 'dist/waterworks-standalone').Path
-          $java = Join-Path $work 'runtime\bin\java.exe'
-          $jar = Join-Path $work 'waterworks-standalone.jar'
-          $process = Start-Process -FilePath $java -ArgumentList '-jar', $jar -WorkingDirectory $work -PassThru
+          & "$env:JAVA_HOME\bin\jpackage.exe" `
+            --type app-image `
+            --name WaterworksStandalone `
+            --app-version 0.1.0 `
+            --input dist/input `
+            --main-jar waterworks-standalone.jar `
+            --runtime-image dist/runtime `
+            --dest dist/portable `
+            --win-console
+      - name: Smoke test portable EXE
+        shell: pwsh
+        run: |
+          $work = (Resolve-Path 'dist/portable/WaterworksStandalone').Path
+          $exe = Join-Path $work 'WaterworksStandalone.exe'
+          $process = Start-Process -FilePath $exe -WorkingDirectory $work -PassThru
           $ok = $false
           try {
             for ($i = 0; $i -lt 30; $i++) {
@@ -76,16 +85,37 @@ jobs:
           } finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
           }
-          if (-not $ok) { throw 'Portable Windows smoke test failed: application did not start.' }
-      - name: Remove smoke-test data
+          if (-not $ok) { throw 'Portable EXE smoke test failed: application did not start.' }
+          Remove-Item -Recurse -Force (Join-Path $work 'data') -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force (Join-Path $work 'logs') -ErrorAction SilentlyContinue
+      - name: Build Windows installer EXE
         shell: pwsh
         run: |
-          Remove-Item -Recurse -Force dist/waterworks-standalone/data -ErrorAction SilentlyContinue
-          Remove-Item -Recurse -Force dist/waterworks-standalone/logs -ErrorAction SilentlyContinue
-      - name: Upload Windows portable package
+          New-Item -ItemType Directory -Force dist/installer | Out-Null
+          & "$env:JAVA_HOME\bin\jpackage.exe" `
+            --type exe `
+            --name WaterworksStandalone `
+            --app-version 0.1.0 `
+            --vendor 'Waterworks Standalone' `
+            --input dist/input `
+            --main-jar waterworks-standalone.jar `
+            --runtime-image dist/runtime `
+            --dest dist/installer `
+            --win-dir-chooser `
+            --win-menu `
+            --win-shortcut `
+            --win-console
+      - name: Upload portable EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: waterworks-standalone-win64-portable
-          path: dist/waterworks-standalone
+          name: waterworks-standalone-win64-exe-portable
+          path: dist/portable/WaterworksStandalone
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload Windows installer EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: waterworks-standalone-win64-installer-exe
+          path: dist/installer/*.exe
           if-no-files-found: error
           retention-days: 14
