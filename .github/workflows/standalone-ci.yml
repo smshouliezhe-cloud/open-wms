@@ -77,6 +77,11 @@ jobs:
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
           }
           if (-not $ok) { throw 'Portable Windows smoke test failed: application did not start.' }
+      - name: Remove smoke-test data
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force dist/waterworks-standalone/data -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/waterworks-standalone/logs -ErrorAction SilentlyContinue
       - name: Upload Windows portable package
         uses: actions/upload-artifact@v4
         with:
