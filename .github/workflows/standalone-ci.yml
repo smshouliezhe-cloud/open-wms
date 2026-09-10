@@ -1,0 +1,28 @@
+name: Standalone App CI
+
+on:
+  push:
+    branches:
+      - standalone-waterworks
+    paths:
+      - 'standalone-app/**'
+      - '.github/workflows/standalone-ci.yml'
+  pull_request:
+    paths:
+      - 'standalone-app/**'
+      - '.github/workflows/standalone-ci.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Test and package standalone app
+        run: mvn -f standalone-app/pom.xml -B clean test package
