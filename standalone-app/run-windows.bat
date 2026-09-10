@@ -7,6 +7,6 @@ if not exist target\waterworks-standalone.jar (
   pause
   exit /b 1
 )
-start "Waterworks Standalone" http://127.0.0.1:7861/
+start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:7861/"
 java -jar target\waterworks-standalone.jar
 pause

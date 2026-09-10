@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>物资出入库单机版</title>
   <style>
-    body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f6f8;color:#1f2329}
-    .wrap{max-width:1180px;margin:24px auto;padding:0 18px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin-bottom:16px}
-    h1{font-size:24px;margin:0 0 18px}h2{font-size:18px;margin:0 0 14px}button,input,select{font:inherit;padding:8px 10px;margin:4px;border:1px solid #cfd4dc;border-radius:6px}
-    button{cursor:pointer;background:#fff}.primary{background:#1677ff;color:#fff;border-color:#1677ff}.danger{color:#c62828}.ok{color:#137333}.muted{color:#667085;font-size:13px}
-    table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #eceff3;padding:8px;text-align:left}th{background:#fafafa;position:sticky;top:0}
-    .scroll{max-height:420px;overflow:auto}.row{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.grow{flex:1;min-width:180px}
+    body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f6f8;color:#1f2329}.wrap{max-width:1180px;margin:24px auto;padding:0 18px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin-bottom:16px}h1{font-size:24px;margin:0 0 18px}h2{font-size:18px;margin:0 0 14px}
+    button,input,select{font:inherit;padding:8px 10px;margin:4px;border:1px solid #cfd4dc;border-radius:6px}button{cursor:pointer;background:#fff}.primary{background:#1677ff;color:#fff;border-color:#1677ff}
+    .danger{color:#c62828}.ok{color:#137333}.muted{color:#667085;font-size:13px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #eceff3;padding:8px;text-align:left}th{background:#fafafa;position:sticky;top:0}
+    .scroll{max-height:420px;overflow:auto}.row{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.grow{flex:1;min-width:180px}.field{min-width:110px}.qty{width:100px}.price{width:110px}
   </style>
 </head>
 <body>
@@ -18,14 +17,30 @@
   <h1>物资出入库单机版</h1>
 
   <div class="card">
-    <h2>WPS / Excel 导入</h2>
+    <h2>手工出入库</h2>
+    <div class="row">
+      <select id="manualType"><option value="IN">入库</option><option value="OUT">出库</option></select>
+      <input id="mDate" type="date" class="field">
+      <input id="mName" placeholder="物资名称*" class="grow">
+      <input id="mSpec" placeholder="规格型号" class="field">
+      <input id="mQty" type="number" step="0.001" placeholder="数量*" class="qty">
+      <input id="mUnit" placeholder="单位" class="field">
+      <input id="mPrice" type="number" step="0.0001" placeholder="单价" class="price">
+      <input id="mReceiver" placeholder="领用/经办人" class="field">
+      <input id="mRemark" placeholder="备注" class="grow">
+      <button class="primary" onclick="manualStock()">确认入账</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>WPS / Excel 批量导入</h2>
     <div class="row">
       <select id="type"><option value="IN">入库</option><option value="OUT">出库</option></select>
       <button class="primary" onclick="previewWps()">读取当前打开的 WPS</button>
       <span class="muted">或</span>
       <input id="file" class="grow" type="file" accept=".xlsx,.xls">
       <button onclick="previewFile()">读取文件</button>
-      <button onclick="commitRows()">确认入账</button>
+      <button onclick="commitRows()">确认批量入账</button>
       <span id="msg" class="muted"></span>
     </div>
     <div class="scroll"><table id="previewTable"></table></div>
@@ -36,35 +51,33 @@
     <button onclick="loadInventory()">刷新库存</button>
     <div class="scroll"><table id="inventoryTable"></table></div>
   </div>
+
+  <div class="card">
+    <h2>最近出入库流水</h2>
+    <button onclick="loadMovements()">刷新流水</button>
+    <div class="scroll"><table id="movementTable"></table></div>
+  </div>
 </div>
 <script>
 let previewRows=[];
+document.getElementById('mDate').value=new Date().toISOString().slice(0,10);
 const esc=v=>String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-async function jsonOrError(res){const data=await res.json();if(!res.ok)throw new Error(data.error||'操作失败');return data}
-async function previewFile(){
-  const f=document.getElementById('file').files[0];if(!f)return alert('请选择文件');
-  const fd=new FormData();fd.append('file',f);setMsg('正在读取文件…');
-  try{previewRows=await jsonOrError(await fetch('/api/import/preview',{method:'POST',body:fd}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}
+async function jsonOrError(res){let data;try{data=await res.json()}catch{throw new Error('服务返回了无法解析的数据')}if(!res.ok)throw new Error(data.error||data.message||'操作失败');return data}
+async function manualStock(){
+  const type=document.getElementById('manualType').value;
+  const row={date:v('mDate')||null,name:v('mName'),spec:v('mSpec'),quantity:num('mQty'),unit:v('mUnit'),unitPrice:num('mPrice'),receiver:v('mReceiver'),remark:v('mRemark'),sourceKey:null};
+  if(!row.name||!row.quantity)return alert('物资名称和数量必填');
+  if(!confirm(`确认${type==='IN'?'入库':'出库'}：${row.name} ${row.quantity}${row.unit||''}？`))return;
+  try{await jsonOrError(await fetch('/api/stock/'+type,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(row)}));setMsg('手工入账完成');document.getElementById('mQty').value='';await refreshAll()}catch(e){setMsg(e.message,true)}
 }
-async function previewWps(){
-  setMsg('正在读取当前 WPS…');
-  try{previewRows=await jsonOrError(await fetch('/api/wps/preview',{method:'POST'}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}
-}
-function setResultMessage(){setMsg(`识别 ${previewRows.length} 行，其中有效 ${previewRows.filter(x=>x.valid).length} 行。确认无误后再点“确认入账”。`)}
-function renderPreview(){
-  const t=document.getElementById('previewTable');
-  t.innerHTML='<tr><th>行</th><th>状态</th><th>日期</th><th>物资</th><th>规格</th><th>数量</th><th>单位</th><th>单价</th><th>领用/经办</th><th>备注</th></tr>'+previewRows.map(x=>`<tr><td>${x.sourceRow}</td><td class="${x.valid?'ok':'danger'}">${x.valid?'可导入':esc(x.error)}</td><td>${esc(x.row.date)}</td><td>${esc(x.row.name)}</td><td>${esc(x.row.spec)}</td><td>${esc(x.row.quantity)}</td><td>${esc(x.row.unit)}</td><td>${esc(x.row.unitPrice)}</td><td>${esc(x.row.receiver)}</td><td>${esc(x.row.remark)}</td></tr>`).join('');
-}
-async function commitRows(){
-  const rows=previewRows.filter(x=>x.valid).map(x=>x.row);if(!rows.length)return alert('没有有效数据');
-  if(!confirm(`确认将 ${rows.length} 行正式入账？`))return;
-  try{const data=await jsonOrError(await fetch('/api/import/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:document.getElementById('type').value,rows})}));setMsg(`完成：入账 ${data.committed} 行，重复跳过 ${data.skippedDuplicate} 行`);await loadInventory()}catch(e){setMsg(e.message,true)}
-}
-async function loadInventory(){
-  try{const rows=await jsonOrError(await fetch('/api/inventory'));document.getElementById('inventoryTable').innerHTML='<tr><th>物资</th><th>规格</th><th>单位</th><th>当前库存</th><th>最近单价</th><th>更新时间</th></tr>'+rows.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.spec)}</td><td>${esc(x.unit)}</td><td>${esc(x.current_qty)}</td><td>${esc(x.last_price)}</td><td>${esc(x.updated_at)}</td></tr>`).join('')}catch(e){setMsg(e.message,true)}
-}
-function setMsg(s,err=false){const el=document.getElementById('msg');el.textContent=s;el.className=err?'danger':'muted'}
-loadInventory();
+async function previewFile(){const f=document.getElementById('file').files[0];if(!f)return alert('请选择文件');const fd=new FormData();fd.append('file',f);setMsg('正在读取文件…');try{previewRows=await jsonOrError(await fetch('/api/import/preview',{method:'POST',body:fd}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}}
+async function previewWps(){setMsg('正在读取当前 WPS…');try{previewRows=await jsonOrError(await fetch('/api/wps/preview',{method:'POST'}));renderPreview();setResultMessage()}catch(e){setMsg(e.message,true)}}
+function setResultMessage(){setMsg(`识别 ${previewRows.length} 行，其中有效 ${previewRows.filter(x=>x.valid).length} 行。确认无误后再入账。`)}
+function renderPreview(){document.getElementById('previewTable').innerHTML='<tr><th>行</th><th>状态</th><th>日期</th><th>物资</th><th>规格</th><th>数量</th><th>单位</th><th>单价</th><th>领用/经办</th><th>备注</th></tr>'+previewRows.map(x=>`<tr><td>${x.sourceRow}</td><td class="${x.valid?'ok':'danger'}">${x.valid?'可导入':esc(x.error)}</td><td>${esc(x.row.date)}</td><td>${esc(x.row.name)}</td><td>${esc(x.row.spec)}</td><td>${esc(x.row.quantity)}</td><td>${esc(x.row.unit)}</td><td>${esc(x.row.unitPrice)}</td><td>${esc(x.row.receiver)}</td><td>${esc(x.row.remark)}</td></tr>`).join('')}
+async function commitRows(){const rows=previewRows.filter(x=>x.valid).map(x=>x.row);if(!rows.length)return alert('没有有效数据');if(!confirm(`确认将 ${rows.length} 行正式入账？`))return;try{const data=await jsonOrError(await fetch('/api/import/commit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:document.getElementById('type').value,rows})}));setMsg(`完成：入账 ${data.committed} 行，重复跳过 ${data.skippedDuplicate} 行`);await refreshAll()}catch(e){setMsg(e.message,true)}}
+async function loadInventory(){try{const rows=await jsonOrError(await fetch('/api/inventory'));document.getElementById('inventoryTable').innerHTML='<tr><th>物资</th><th>规格</th><th>单位</th><th>当前库存</th><th>最近单价</th><th>更新时间</th></tr>'+rows.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.spec)}</td><td>${esc(x.unit)}</td><td>${esc(x.current_qty)}</td><td>${esc(x.last_price)}</td><td>${esc(x.updated_at)}</td></tr>`).join('')}catch(e){setMsg(e.message,true)}}
+async function loadMovements(){try{const rows=await jsonOrError(await fetch('/api/movements?limit=300'));document.getElementById('movementTable').innerHTML='<tr><th>ID</th><th>类型</th><th>日期</th><th>物资</th><th>规格</th><th>数量</th><th>单位</th><th>单价</th><th>领用/经办</th><th>备注</th></tr>'+rows.map(x=>`<tr><td>${x.id}</td><td>${x.movement_type==='IN'?'入库':'出库'}</td><td>${esc(x.biz_date)}</td><td>${esc(x.material_name)}</td><td>${esc(x.spec)}</td><td>${esc(x.quantity)}</td><td>${esc(x.unit)}</td><td>${esc(x.unit_price)}</td><td>${esc(x.receiver)}</td><td>${esc(x.remark)}</td></tr>`).join('')}catch(e){setMsg(e.message,true)}}
+function v(id){return document.getElementById(id).value.trim()}function num(id){const s=v(id);return s===''?null:Number(s)}function setMsg(s,err=false){const el=document.getElementById('msg');el.textContent=s;el.className=err?'danger':'muted'}async function refreshAll(){await Promise.all([loadInventory(),loadMovements()])}refreshAll();
 </script>
 </body>
 </html>

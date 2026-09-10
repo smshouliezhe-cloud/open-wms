@@ -26,3 +26,10 @@ jobs:
           cache: maven
       - name: Test and package standalone app
         run: mvn -f standalone-app/pom.xml -B clean test package
+      - name: Upload executable jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: waterworks-standalone-jar
+          path: standalone-app/target/waterworks-standalone.jar
+          if-no-files-found: error
+          retention-days: 14

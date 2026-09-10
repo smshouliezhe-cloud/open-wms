@@ -2,12 +2,15 @@ package com.yiruantong.standalone.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,52 +34,61 @@ public class WpsComService {
             throw new IllegalArgumentException("直接读取当前 WPS 仅支持 Windows");
         }
 
-        Path script = Path.of("wps-reader.ps1").toAbsolutePath().normalize();
-        if (!Files.exists(script)) {
-            throw new IllegalArgumentException("缺少 wps-reader.ps1：" + script);
-        }
-
-        Process process = new ProcessBuilder(
-            "powershell.exe",
-            "-NoProfile",
-            "-NonInteractive",
-            "-ExecutionPolicy", "Bypass",
-            "-File", script.toString()
-        ).redirectErrorStream(true).start();
-
-        boolean finished = process.waitFor(Duration.ofSeconds(20).toMillis(), TimeUnit.MILLISECONDS);
-        if (!finished) {
-            process.destroyForcibly();
-            throw new IllegalArgumentException("读取 WPS 超时，请确认 WPS 表格处于打开状态");
-        }
-
-        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        if (process.exitValue() != 0) {
-            throw new IllegalArgumentException("读取 WPS 失败：" + compact(output));
-        }
-
-        String json = extractJson(output);
-        Map<String, Object> payload;
+        Path script = extractScript();
         try {
-            payload = objectMapper.readValue(json, new TypeReference<>() {});
-        } catch (IOException ex) {
-            throw new IllegalArgumentException("WPS 返回数据无法解析：" + compact(output));
-        }
+            Process process = new ProcessBuilder(
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy", "Bypass",
+                "-File", script.toString()
+            ).redirectErrorStream(true).start();
 
-        String workbook = String.valueOf(payload.getOrDefault("workbook", "当前工作簿"));
-        String sheet = String.valueOf(payload.getOrDefault("sheet", "当前Sheet"));
-        int firstRow = toInt(payload.get("firstRow"), 1);
-        List<List<String>> rows = toRows(payload.get("rows"));
+            boolean finished = process.waitFor(Duration.ofSeconds(20).toMillis(), TimeUnit.MILLISECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                throw new IllegalArgumentException("读取 WPS 超时，请确认 WPS 表格处于打开状态");
+            }
 
-        List<TabularImportMapper.PreviewRow> result = mapper.map(
-            rows,
-            "wps:" + workbook + ":" + sheet,
-            firstRow
-        );
-        if (result.isEmpty()) {
-            throw new IllegalArgumentException("当前 WPS 工作表没有识别到“物资名称 + 数量”表头");
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            if (process.exitValue() != 0) {
+                throw new IllegalArgumentException("读取 WPS 失败：" + compact(output));
+            }
+
+            String json = extractJson(output);
+            Map<String, Object> payload;
+            try {
+                payload = objectMapper.readValue(json, new TypeReference<>() {});
+            } catch (IOException ex) {
+                throw new IllegalArgumentException("WPS 返回数据无法解析：" + compact(output));
+            }
+
+            String workbook = String.valueOf(payload.getOrDefault("workbook", "当前工作簿"));
+            String sheet = String.valueOf(payload.getOrDefault("sheet", "当前Sheet"));
+            int firstRow = toInt(payload.get("firstRow"), 1);
+            List<List<String>> rows = toRows(payload.get("rows"));
+
+            List<TabularImportMapper.PreviewRow> result = mapper.map(
+                rows,
+                "wps:" + workbook + ":" + sheet,
+                firstRow
+            );
+            if (result.isEmpty()) {
+                throw new IllegalArgumentException("当前 WPS 工作表没有识别到“物资名称 + 数量”表头");
+            }
+            return result;
+        } finally {
+            try { Files.deleteIfExists(script); } catch (IOException ignored) { }
         }
-        return result;
+    }
+
+    private static Path extractScript() throws IOException {
+        ClassPathResource resource = new ClassPathResource("wps-reader.ps1");
+        Path target = Files.createTempFile("waterworks-wps-reader-", ".ps1");
+        try (InputStream input = resource.getInputStream()) {
+            Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return target;
     }
 
     private static List<List<String>> toRows(Object value) {
